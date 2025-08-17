@@ -1,0 +1,206 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Manager</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+  
+    <div class="navbar">
+
+        <a href="#">Stock Manager</a>
+        <div>
+            <form action="/inventory/" method="get">
+                <input type="text" placeholder="Product ID" name="productid">
+                <button type="submit">Search</button>
+            </form>
+            <form action="">    
+                <input type="submit" value="Add Product" class="add-product-button">
+            </form>
+            
+        </div>
+    </div>
+
+    <div class="content">
+        <h1>Dashboard</h1>
+        <div class="card-container">
+            <div class="card ">
+                <div class="card-header">
+                    <h3>Total In Stock</h3>
+                </div>
+                <div class="card-value">
+                    <p>{{ instock_count }}</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Total Out Stock</h3>
+                </div>
+                <div class="card-value">
+                    <p>{{ outofstock_count }}</p>
+                </div>
+
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Total In Transist</h3>
+                </div>
+                <div class="card-value">
+                    <p>{{ intransit_count }}</p>
+                </div>
+
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Total Damage</h3>
+                </div>
+                <div class="card-value">
+                    <p>{{ damaged_count }}</p>
+                </div>
+
+            </div>
+        </div>
+        <div class="transaction-section">
+            <h2>Recent Transactions</h2>
+            <table class="transaction-table">
+            <thead>
+                <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Quantity</th>
+                <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in last_5_products %}
+                <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.state }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.updated_at }}</td>
+                </tr>
+                {% endfor %}
+                
+            </tbody>
+            </table>
+            <a href="" id="fhistory">full history</a>
+        </div>
+
+    </div>
+    <div class="footer">
+        <p>&copy;   <span class="cpyear"></span> Stock Manager. All rights reserved.</p>
+    </div>
+    {% if product %}
+    <div class="model-bg model-show" id="modelBg-1">
+        <div class="model-content">
+           <span class="model-close-btn" id="modelCloseBtn-1">X</span>
+            <h2>{{product.id}} : {{product.name}}</h2>
+             <table class="transaction-table">
+            <thead>
+                <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Quantity</th>
+                <th>Date</th>
+                <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+               
+                <tr class="product-row">
+                <td>{{ product.name }}</td>
+                <td>{{ product.state }} </td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.updated_at }}</td>
+                <td class="actions-product">
+                <form action="/inventory/">
+                    {% csrf_token %}
+                    <input type="hidden" name="productid" value="{{ product.id }}">
+                    <input type="hidden" name="status" value="edit">
+                    <input type="submit" value="Edit" class="edit-button">
+                </form>
+                <form action="/inventory/delete/" method="post" class="delete-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="productid" value="{{ product.id }}">
+                    <input type="submit" value="Delete" class="delete-button">
+                </form>
+                
+                </td>
+                </tr>
+                
+            </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    <div class="model-bg" id="modelBg">
+        <div class="model-content">
+           <span class="model-close-btn" id="modelCloseBtn">X</span>
+            <h2>Transaction History</h2>
+             <table class="transaction-table">
+            <thead>
+                <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Quantity</th>
+                <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in Products %}
+                <tr class="product-row">
+                <td>{{ product.name }}</td>
+                <td>{{ product.state }} </td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.updated_at }}</td>
+                </tr>
+                {% endfor %}
+                
+            </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        
+        document.querySelector('.cpyear').textContent = new Date().getFullYear();
+        const modelBg = document.getElementById('modelBg');
+        const modelCloseBtn = document.getElementById('modelCloseBtn');
+        const fullHistoryLink = document.getElementById('fhistory');
+        fullHistoryLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            modelBg.style.display = 'flex';
+        });
+        modelCloseBtn.addEventListener('click', function() {
+            modelBg.style.display = 'none';
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const productRows = document.querySelectorAll('.product-row');
+            productRows.forEach(row => {
+               if(row.querySelector('td:nth-child(2)').textContent.trim().toLowerCase().includes('in stock')) {
+                    row.style.color = 'green'; 
+                }
+                else if(row.querySelector('td:nth-child(2)').textContent.trim().toLowerCase().includes('out of stock')) {
+                    row.style.color = 'red'; 
+                }
+                else if(row.querySelector('td:nth-child(2)').textContent.trim().toLowerCase().includes('in transit')) {
+                    row.style.color = 'orange';
+                }
+                else if(row.querySelector('td:nth-child(2)').textContent.trim().toLowerCase().includes('damaged')) {
+                    row.style.color = 'gray';                 }
+            });
+        });
+        const modelBg1 = document.getElementById('modelBg-1');
+        const modelCloseBtn1 = document.getElementById('modelCloseBtn-1');
+        if(modelCloseBtn1) {
+            modelCloseBtn1.addEventListener('click', function() {
+                modelBg1.style.display = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
